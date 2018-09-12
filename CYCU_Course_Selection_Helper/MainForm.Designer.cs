@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.txt_Log = new System.Windows.Forms.TextBox();
             this.cmenu_txtLog = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.clearLog_ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -94,6 +95,8 @@
             // 
             // statusStrip
             // 
+            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.slb_LoginAs});
             this.statusStrip.Location = new System.Drawing.Point(0, 385);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(465, 22);
@@ -228,6 +231,12 @@
             // 
             // menuStrip
             // 
+            this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.loginToolStripMenuItem,
+            this.cancelLoginToolStripMenuItem,
+            this.logoutToolStripMenuItem,
+            this.myCourseToolStripMenuItem,
+            this.searchCourseToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Size = new System.Drawing.Size(465, 24);
@@ -318,6 +327,7 @@
             this.Controls.Add(this.menuStrip);
             this.Controls.Add(this.txt_Log);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
             this.MaximizeBox = false;
             this.Name = "MainForm";
