@@ -3,57 +3,53 @@ using System.Collections;
 using System.Diagnostics;
 using System.IO;
 
-namespace CYCU_Course_Selection_Helper
+namespace CYCU_Course_Selection_Helper.Models
 {
-    public class FileIO
+    public static class FileIo
     {
-        public static bool SaveListToTxt(string fpath, ArrayList list)
+        public static void SaveListToTxt(string filePath, ArrayList list)
         {
             StreamWriter file = null;
             try
             {
-                file = new StreamWriter(fpath);
+                file = new StreamWriter(filePath);
 
                 foreach (string line in list)
                 {
                     file.WriteLine(line);
                 }
-                return true;
             }
             catch(Exception ex)
             {
                 Debug.Print(ex.Message);
-                return false;
             }
             finally
             {
-                if (file != null) file.Close();
+                file?.Close();
             }
         }
 
-        public static bool LoadFileFromTxt(string fpath, out ArrayList list)
+        public static void LoadFileFromTxt(string filePath, out ArrayList list)
         {
             StreamReader file = null;
             list = new ArrayList();
 
             try
             {
-                file = new StreamReader(fpath);
+                file = new StreamReader(filePath);
 
                 while (!file.EndOfStream)
                 {
                     list.Add(file.ReadLine());
                 }
-                return true;
             }
             catch (Exception ex)
             {
                 Debug.Print(ex.Message);
-                return false;
             }
             finally
             {
-                if (file != null) file.Close();
+                file?.Close();
             }
         }
     }

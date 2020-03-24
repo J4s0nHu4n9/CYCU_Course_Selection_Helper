@@ -1,4 +1,4 @@
-﻿namespace CYCU_Course_Selection_Helper
+﻿namespace CYCU_Course_Selection_Helper.SubForms
 {
     partial class MyCourse
     {

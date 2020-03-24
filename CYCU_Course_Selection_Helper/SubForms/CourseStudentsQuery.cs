@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace CYCU_Course_Selection_Helper
+namespace CYCU_Course_Selection_Helper.SubForms
 {
     public partial class CourseStudentsQuery : Form
     {

@@ -1,39 +1,39 @@
-﻿using System.Text;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
+using System.Text;
 
-namespace CYCU_Course_Selection_Helper
+namespace CYCU_Course_Selection_Helper.Models
 {
-    public class Crypto
+    public static class Crypto
     {
         public static string GetEncrypt(string pw, string id, string secureRandom)
         {
-            var MD5Hash = CalculateMd5Hash(pw);
-            var result = CalculateSHA256Hash(MD5Hash, id, secureRandom);
+            string md5Hash = CalculateMd5Hash(pw);
+            string result = CalculateSha256Hash(md5Hash, id, secureRandom);
             return result;
         }
 
         private static string CalculateMd5Hash(string input)
         {
-            var key = Encoding.UTF8.GetBytes(input);
-            var hash = MD5.Create().ComputeHash(key);
-            var sb = new StringBuilder();
+            byte[] key = Encoding.UTF8.GetBytes(input);
+            byte[] hash = MD5.Create().ComputeHash(key);
+            StringBuilder sb = new StringBuilder();
             foreach (var b in hash)
                 sb.Append(b.ToString("x2"));
             return sb.ToString();
         }
 
-        private static string CalculateSHA256Hash(string _key, string _msg1, string _msg2)
+        private static string CalculateSha256Hash(string key, string msg1, string msg2)
         {
-            var key = Encoding.UTF8.GetBytes(_key);
-            var msg1 = Encoding.UTF8.GetBytes(_msg1);
-            var msg2 = Encoding.UTF8.GetBytes(_msg2);
+            byte[] encodedKey = Encoding.UTF8.GetBytes(key);
+            byte[] encodedMsg1 = Encoding.UTF8.GetBytes(msg1);
+            byte[] encodedMsg2 = Encoding.UTF8.GetBytes(msg2);
 
-            var hmac = new HMACSHA256(key);
-            hmac.TransformBlock(msg1, 0, msg1.Length, null, 0);
-            hmac.TransformFinalBlock(msg2, 0, msg2.Length);
+            HMACSHA256 hmac = new HMACSHA256(encodedKey);
+            hmac.TransformBlock(encodedMsg1, 0, encodedMsg1.Length, null, 0);
+            hmac.TransformFinalBlock(encodedMsg2, 0, encodedMsg2.Length);
 
-            var sb = new StringBuilder();
-            foreach (var b in hmac.Hash)
+            StringBuilder sb = new StringBuilder();
+            foreach (byte b in hmac.Hash)
                 sb.Append(b.ToString("x2"));
             return sb.ToString();
         }

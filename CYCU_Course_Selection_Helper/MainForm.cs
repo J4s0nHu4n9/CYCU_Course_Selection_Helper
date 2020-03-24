@@ -1,28 +1,32 @@
 ﻿/*
  *      Author : J4S0N.H
- *      Last Update : 2018 / 03 / 05
+ *      Updates :
+ *                  2020 / 03 / 24 - Refactor code
+ *                  2018 / 03 / 05 - First release
  */
 
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
+using CYCU_Course_Selection_Helper.Models;
+using CYCU_Course_Selection_Helper.SubForms;
+using Timer = System.Timers.Timer;
 
 namespace CYCU_Course_Selection_Helper
 {
     public partial class MainForm : Form
     {
-        public System.Timers.Timer timer_syncNetworkTime;
-        public System.Timers.Timer timer_waitForScheduledTime;
-        public System.Timers.Timer timer_currentTime;
-        public System.Timers.Timer timer_loopSelect;
-        public System.Timers.Timer timer_loopRegister;
-        public System.Timers.Timer timer_loopDelete;
-        public System.Timers.Timer timer_tryToLogin;
-        public System.Timers.Timer timer_keepConnectAlive;
+        private Timer _timerSyncNetworkTime;
+        private Timer _timerWaitForScheduledTime;
+        private Timer _timerCurrentTime;
+        private Timer _timerLoopSelect;
+        private Timer _timerLoopRegister;
+        private Timer _timerLoopDelete;
+        private Timer _timerTryToLogin;
+        private Timer _timerKeepConnectAlive;
 
-        public static PROC_MODE ProcessMode { set; get; }
-        public static CONN_MODE ConnectMode { set; get; }
+        private static ConnectionMode CMode { set; get; }
 
         public MainForm()
         {
@@ -31,84 +35,84 @@ namespace CYCU_Course_Selection_Helper
             InitializeCoursesList();
         }
 
-        private void InitializeCoursesList()
+        private static void InitializeCoursesList()
         {
-            FileIO.LoadFileFromTxt("sel_courses.list", out ProgramData.ReadyToSelectCoursesList);
-            FileIO.LoadFileFromTxt("del_courses.list", out ProgramData.ReadyToDeleteCoursesList);
+            FileIo.LoadFileFromTxt("sel_courses.list", out ProgramData.ReadyToSelectCoursesList);
+            FileIo.LoadFileFromTxt("del_courses.list", out ProgramData.ReadyToDeleteCoursesList);
         }
 
         private void InitializeSystemTimer()
         {
             //  Sync network time
-            timer_syncNetworkTime = new System.Timers.Timer
+            _timerSyncNetworkTime = new Timer
             {
                 Interval = 5000
             };
-            timer_syncNetworkTime.Elapsed += timer_syncNetworkTime_Elapsed;
+            _timerSyncNetworkTime.Elapsed += timer_syncNetworkTime_Elapsed;
 
             //  Try to login
-            timer_tryToLogin = new System.Timers.Timer
+            _timerTryToLogin = new Timer
             {
                 Interval = 1000
             };
-            timer_tryToLogin.Elapsed += timer_tryToLogin_Elapsed;
-            timer_tryToLogin.SynchronizingObject = this;
+            _timerTryToLogin.Elapsed += timer_tryToLogin_Elapsed;
+            _timerTryToLogin.SynchronizingObject = this;
 
             //  Wait for scheduled time
-            timer_waitForScheduledTime = new System.Timers.Timer
+            _timerWaitForScheduledTime = new Timer
             {
                 Interval = 5000
             };
-            timer_waitForScheduledTime.Elapsed += timer_waitForScheduledTime_Elapsed;
-            timer_waitForScheduledTime.SynchronizingObject = this;
+            _timerWaitForScheduledTime.Elapsed += timer_waitForScheduledTime_Elapsed;
+            _timerWaitForScheduledTime.SynchronizingObject = this;
 
             //  Current time
-            timer_currentTime = new System.Timers.Timer
+            _timerCurrentTime = new Timer
             {
                 Interval = 1000
             };
-            timer_currentTime.Elapsed += timer_currentTime_Elapsed;
-            timer_currentTime.SynchronizingObject = this;
+            _timerCurrentTime.Elapsed += timer_currentTime_Elapsed;
+            _timerCurrentTime.SynchronizingObject = this;
 
-            //  Register courses looper
-            timer_loopRegister = new System.Timers.Timer
+            //  Register courses loop
+            _timerLoopRegister = new Timer
             {
-                Interval = 100     //  0.1 second
+                Interval = 100 //  0.1 second
             };
-            timer_loopRegister.Elapsed += timer_loopRegister_Elapsed;
-            timer_loopRegister.SynchronizingObject = this;
+            _timerLoopRegister.Elapsed += Timer_loopRegister_Elapsed;
+            _timerLoopRegister.SynchronizingObject = this;
 
-            //  Select courses looper
-            timer_loopSelect = new System.Timers.Timer
+            //  Select courses loop
+            _timerLoopSelect = new Timer
             {
-                Interval = 200      //  0.2 second
+                Interval = 200 //  0.2 second
             };
-            timer_loopSelect.Elapsed += timer_loopSelect_Elapsed;
-            timer_loopSelect.SynchronizingObject = this;
+            _timerLoopSelect.Elapsed += Timer_loopSelect_Elapsed;
+            _timerLoopSelect.SynchronizingObject = this;
 
-            timer_loopDelete = new System.Timers.Timer
+            _timerLoopDelete = new Timer
             {
                 Interval = 100
             };
-            timer_loopDelete.Elapsed += timer_loopDelete_Elapsed;
-            timer_loopDelete.SynchronizingObject = this;
+            _timerLoopDelete.Elapsed += timer_loopDelete_Elapsed;
+            _timerLoopDelete.SynchronizingObject = this;
 
             //  Keep connection alive
-            timer_keepConnectAlive = new System.Timers.Timer
+            _timerKeepConnectAlive = new Timer
             {
-                Interval = 180000   //  180 second
+                Interval = 180000 //  180 second
             };
-            timer_keepConnectAlive.Elapsed += timer_keepConnectAlive_Elapsed;
-            timer_keepConnectAlive.SynchronizingObject = this;
+            _timerKeepConnectAlive.Elapsed += timer_keepConnectAlive_Elapsed;
+            _timerKeepConnectAlive.SynchronizingObject = this;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            //  To control wheather send query or not
+            //  To control whether send query or not
             ProgramData.AcceptToConnect = false;
             ProgramData.LoginSuccess = false;
 
-            ConnectMode = CONN_MODE.UNKNOWN;
+            CMode = ConnectionMode.Unknown;
 
             slb_LoginAs.Visible = true;
             slb_LoginAs.Text = "尚未登入";
@@ -140,14 +144,14 @@ namespace CYCU_Course_Selection_Helper
             dateTimePicker_OnSchedule.Value = ProgramData.CurrentNetworkTime;
 
             //  Time timers start
-            timer_syncNetworkTime.Start();
-            timer_currentTime.Start();
+            _timerSyncNetworkTime.Start();
+            _timerCurrentTime.Start();
 
             //  Keep connection alive timer start
-            timer_keepConnectAlive.Start();
+            _timerKeepConnectAlive.Start();
 
             //  MainForm closing event (do logout)
-            FormClosing += new FormClosingEventHandler(Main_FormClosing);
+            FormClosing += Main_FormClosing;
 
             //  For Debugger
             Debug.Print("Main(UI) thread : " + Thread.CurrentThread.ManagedThreadId);
@@ -155,11 +159,11 @@ namespace CYCU_Course_Selection_Helper
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (ConnectMode.Equals(CONN_MODE.ONLINE))
+            if (CMode.Equals(ConnectionMode.Online))
                 HttpCommunication.Logout(out string msg);
         }
 
-        private void btn_StartReg_Click(object sender, EventArgs e)
+        private void Btn_StartReg_Click(object sender, EventArgs e)
         {
             if (CheckSelCourseListCount() == 0)
                 return;
@@ -168,13 +172,13 @@ namespace CYCU_Course_Selection_Helper
             radio_register.Enabled = radio_selection.Enabled = false;
             checkBox_OnSchedule.Enabled = group_TimePicker.Enabled = false;
 
-            ProgramData.CurrentSelectCourceIdx = 0;
-            timer_loopRegister.Start();
+            ProgramData.CurrentSelectCourseIdx = 0;
+            _timerLoopRegister.Start();
 
             btn_StartReg.Enabled = false;
         }
 
-        private void btn_StartSel_Click(object sender, EventArgs e)
+        private void Btn_StartSel_Click(object sender, EventArgs e)
         {
             if (CheckSelCourseListCount() == 0)
                 return;
@@ -188,10 +192,11 @@ namespace CYCU_Course_Selection_Helper
             {
                 if (dateTimePicker_OnSchedule.Value.AddSeconds(-30) > ProgramData.CurrentNetworkTime)
                 {
-                    string scheduledTime = dateTimePicker_OnSchedule.Value.AddSeconds(-15).ToString("yyyy/MM/dd - HH:mm:ss");
+                    string scheduledTime = dateTimePicker_OnSchedule.Value.AddSeconds(-15)
+                        .ToString("yyyy/MM/dd - HH:mm:ss");
                     AddLog("排程選課將於 " + scheduledTime + " 開始。");
 
-                    timer_waitForScheduledTime.Start();
+                    _timerWaitForScheduledTime.Start();
 
                     btn_StartSel.Visible = false;
                     btn_Cancel.Visible = true;
@@ -219,14 +224,14 @@ namespace CYCU_Course_Selection_Helper
 
         private void btn_Cancel_Click(object sender, EventArgs e)
         {
-            if (timer_waitForScheduledTime.Enabled || timer_loopSelect.Enabled)
+            if (_timerWaitForScheduledTime.Enabled || _timerLoopSelect.Enabled)
             {
-                timer_loopSelect.Stop();
-                timer_waitForScheduledTime.Stop();
+                _timerLoopSelect.Stop();
+                _timerWaitForScheduledTime.Stop();
 
                 AddLog("動作已取消。");
 
-                timer_tryToLogin.Interval = 1000;
+                _timerTryToLogin.Interval = 1000;
 
                 btn_readySelCoursesList.Enabled = true;
                 radio_register.Enabled = radio_selection.Enabled = true;
@@ -258,38 +263,35 @@ namespace CYCU_Course_Selection_Helper
             courseStudentsQuery.ShowDialog();
         }
 
-        private void clearLog_ToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ClearLog_ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddLog(null);
         }
 
-        private void loginToolStripMenuItem_Click(object sender, EventArgs e)
+        private void LoginToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Login login = new Login();
             login.ShowDialog();
 
-            if (ProgramData.AcceptToConnect)
-            {
-                ExecuteLogin();
-            }
+            if (ProgramData.AcceptToConnect) ExecuteLogin();
         }
 
-        private void cancelLoginToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CancelLoginToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            timer_tryToLogin.Stop();
+            _timerTryToLogin.Stop();
 
             if (!ProgramData.LoginSuccess)
             {
-                ConnectMode = CONN_MODE.UNKNOWN;
+                CMode = ConnectionMode.Unknown;
                 slb_LoginAs.Text = "已取消登入";
 
                 ProgramData.LoginSuccess = false;
                 ProgramData.AcceptToConnect = false;
 
                 //  Set Timer stop
-                timer_loopRegister.Stop();
-                timer_loopSelect.Stop();
-                timer_waitForScheduledTime.Stop();
+                _timerLoopRegister.Stop();
+                _timerLoopSelect.Stop();
+                _timerWaitForScheduledTime.Stop();
 
                 //  Set Visible
                 loginToolStripMenuItem.Visible = true;
@@ -312,21 +314,21 @@ namespace CYCU_Course_Selection_Helper
             }
         }
 
-        private void logoutToolStripMenuItem_Click(object sender, EventArgs e)
+        private void LogoutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             HttpCommunication.Logout(out string msg);
 
             AddLog(msg);
-            ConnectMode = CONN_MODE.UNKNOWN;
+            CMode = ConnectionMode.Unknown;
             slb_LoginAs.Text = "尚未登入";
 
             ProgramData.LoginSuccess = false;
             ProgramData.AcceptToConnect = false;
 
             //  Set Timer stop
-            timer_loopRegister.Stop();
-            timer_loopSelect.Stop();
-            timer_waitForScheduledTime.Stop();
+            _timerLoopRegister.Stop();
+            _timerLoopSelect.Stop();
+            _timerWaitForScheduledTime.Stop();
 
             //  Set Visible
             loginToolStripMenuItem.Visible = true;
@@ -350,7 +352,7 @@ namespace CYCU_Course_Selection_Helper
             checkBox_DelCourseFirst.Checked = false;
         }
 
-        private void txt_Log_TextChanged(object sender, EventArgs e)
+        private void Txt_Log_TextChanged(object sender, EventArgs e)
         {
             if (txt_Log.Lines.Length > 50) AddLog(null);
 
@@ -358,7 +360,7 @@ namespace CYCU_Course_Selection_Helper
             txt_Log.ScrollToCaret();
         }
 
-        private void txt_Log_Enter(object sender, EventArgs e)
+        private void Txt_Log_Enter(object sender, EventArgs e)
         {
             ActiveControl = null;
         }
@@ -378,27 +380,23 @@ namespace CYCU_Course_Selection_Helper
             else
             {
                 string currentTime = ProgramData.CurrentNetworkTime.ToString("HH:mm:ss");
-                txt_Log.Text += currentTime + "\t" + msg + "\r\n";
+                txt_Log.Text += $"{currentTime}\t{msg}{Environment.NewLine}";
             }
         }
 
         private int CheckSelCourseListCount()
         {
             int count = ProgramData.ReadyToSelectCoursesList.Count;
-            if (count == 0)
-            {
-                AddLog("請先將待選課程加入課程代碼清單。");
-            }
+            if (count == 0) AddLog("請先將待選課程加入課程代碼清單。");
+
             return count;
         }
 
         private int CheckDelCourseListCount()
         {
             int count = ProgramData.ReadyToDeleteCoursesList.Count;
-            if (count == 0)
-            {
-                AddLog("請先將待退課程加入課程代碼清單。");
-            }
+            if (count == 0) AddLog("請先將待退課程加入課程代碼清單。");
+
             return count;
         }
 
@@ -407,16 +405,14 @@ namespace CYCU_Course_Selection_Helper
             if (!ProgramData.LoginSuccess) AddLog("等待登入成功後將自動進行嘗試加選。");
 
             if (checkBox_DelCourseFirst.Checked)
-            {
                 if (CheckDelCourseListCount() > 0)
                 {
-                    ProgramData.CurrentDeleteCourceIdx = 0;
-                    timer_loopDelete.Start();
+                    ProgramData.CurrentDeleteCourseIdx = 0;
+                    _timerLoopDelete.Start();
                 }
-            }
 
-            ProgramData.CurrentSelectCourceIdx = 0;
-            timer_loopSelect.Start();
+            ProgramData.CurrentSelectCourseIdx = 0;
+            _timerLoopSelect.Start();
 
             btn_StartSel.Visible = false;
             btn_Cancel.Visible = true;
@@ -424,7 +420,7 @@ namespace CYCU_Course_Selection_Helper
 
         private void ExecuteLogin()
         {
-            timer_tryToLogin.Start();
+            _timerTryToLogin.Start();
 
             loginToolStripMenuItem.Visible = false;
             cancelLoginToolStripMenuItem.Visible = true;
@@ -434,10 +430,10 @@ namespace CYCU_Course_Selection_Helper
         {
             Debug.Print(DateTime.Now.ToLongTimeString() + " - Already lost connection.");
 
-            ConnectMode = CONN_MODE.OFFLINE;
+            CMode = ConnectionMode.Offline;
 
             ProgramData.LoginSuccess = false;
-            
+
             logoutToolStripMenuItem.Visible = false;
             myCourseToolStripMenuItem.Visible = false;
             searchCourseToolStripMenuItem.Visible = false;
@@ -445,16 +441,15 @@ namespace CYCU_Course_Selection_Helper
         }
 
 
-
         /*  Checked changed events  */
-        private void radio_register_CheckedChanged(object sender, EventArgs e)
+        private void Radio_register_CheckedChanged(object sender, EventArgs e)
         {
             if (radio_register.Checked)
             {
                 btn_StartSel.Visible = false;
                 btn_StartReg.Visible = true;
 
-                if (!ProgramData.LoginSuccess || ConnectMode.Equals(CONN_MODE.OFFLINE))
+                if (!ProgramData.LoginSuccess || CMode.Equals(ConnectionMode.Offline))
                 {
                     AddLog("必須登入成功才能選擇篩選登記模式。");
                     btn_StartReg.Enabled = false;
@@ -464,8 +459,6 @@ namespace CYCU_Course_Selection_Helper
                     btn_StartReg.Enabled = true;
                 }
 
-                ProcessMode = PROC_MODE.REG;
-
                 btn_readySelCoursesList.Enabled = true;
                 checkBox_DelCourseFirst.Enabled = false;
                 checkBox_OnHook.Enabled = false;
@@ -474,14 +467,12 @@ namespace CYCU_Course_Selection_Helper
             }
         }
 
-        private void radio_selection_CheckedChanged(object sender, EventArgs e)
+        private void Radio_selection_CheckedChanged(object sender, EventArgs e)
         {
             if (radio_selection.Checked)
             {
                 btn_StartReg.Visible = false;
                 btn_StartSel.Visible = true;
-
-                ProcessMode = PROC_MODE.SEL;
 
                 btn_readySelCoursesList.Enabled = true;
                 checkBox_OnHook.Enabled = true;
@@ -489,24 +480,16 @@ namespace CYCU_Course_Selection_Helper
                 group_TimePicker.Enabled = checkBox_OnSchedule.Checked;
                 checkBox_DelCourseFirst.Enabled = true;
                 btn_readyDelCoursesList.Enabled = checkBox_DelCourseFirst.Checked;
-
             }
         }
 
-        private void checkBox_OnHook_CheckedChanged(object sender, EventArgs e)
+        private void CheckBox_OnHook_CheckedChanged(object sender, EventArgs e)
         {
-            if (checkBox_OnHook.Checked)
-            {
-                timer_loopSelect.Interval = 500;
-            }
-            else
-            {
-                timer_loopSelect.Interval = 200;
-            }
-            AddLog("時間間隔更改為 " + timer_loopSelect.Interval + " 毫秒。");
+            _timerLoopSelect.Interval = checkBox_OnHook.Checked ? 500 : 200;
+            AddLog("時間間隔更改為 " + _timerLoopSelect.Interval + " 毫秒。");
         }
 
-        private void checkBox_OnSchedule_CheckedChanged(object sender, EventArgs e)
+        private void CheckBox_OnSchedule_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBox_OnSchedule.Checked)
             {
@@ -523,7 +506,7 @@ namespace CYCU_Course_Selection_Helper
             }
         }
 
-        private void checkBox_DelCourseFirst_CheckedChanged(object sender, EventArgs e)
+        private void CheckBox_DelCourseFirst_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBox_DelCourseFirst.Checked)
             {
@@ -538,21 +521,19 @@ namespace CYCU_Course_Selection_Helper
         }
 
 
-
         /*  Timer elapsed definitions  */
-        private void timer_loopRegister_Elapsed(object sender, EventArgs e)
+        private void Timer_loopRegister_Elapsed(object sender, EventArgs e)
         {
             if (ProgramData.LoginSuccess)
-            {
                 if (radio_register.Checked)
                 {
-                    string opcode = ProgramData.ReadyToSelectCoursesList[ProgramData.CurrentSelectCourceIdx].ToString();
+                    string opcode = ProgramData.ReadyToSelectCoursesList[ProgramData.CurrentSelectCourseIdx].ToString();
 
                     HttpCommunication.AddRegister(opcode, out string msg);
 
-                    if (ProgramData.CurrentSelectCourceIdx + 1 == ProgramData.ReadyToSelectCoursesList.Count)
+                    if (ProgramData.CurrentSelectCourseIdx + 1 == ProgramData.ReadyToSelectCoursesList.Count)
                     {
-                        timer_loopRegister.Stop();
+                        _timerLoopRegister.Stop();
 
                         btn_readySelCoursesList.Enabled = true;
                         radio_register.Enabled = radio_selection.Enabled = true;
@@ -561,30 +542,31 @@ namespace CYCU_Course_Selection_Helper
 
                         btn_StartReg.Enabled = true;
                     }
-                    else ProgramData.CurrentSelectCourceIdx += 1;
+                    else
+                    {
+                        ProgramData.CurrentSelectCourseIdx += 1;
+                    }
 
                     AddLog(msg);
                 }
-            }
         }
 
-        private void timer_loopSelect_Elapsed(object sender, EventArgs e)
+        private void Timer_loopSelect_Elapsed(object sender, EventArgs e)
         {
             if (ProgramData.LoginSuccess)
-            {
                 if (radio_selection.Checked)
                 {
-                    string opcode = ProgramData.ReadyToSelectCoursesList[ProgramData.CurrentSelectCourceIdx].ToString();
+                    string opcode = ProgramData.ReadyToSelectCoursesList[ProgramData.CurrentSelectCourseIdx].ToString();
 
                     if (HttpCommunication.AddSelection(opcode, out string msg))
                     {
-                        ProgramData.ReadyToSelectCoursesList.Remove(ProgramData.CurrentSelectCourceIdx);
-                        ProgramData.CurrentSelectCourceIdx -= 1;
+                        ProgramData.ReadyToSelectCoursesList.Remove(ProgramData.CurrentSelectCourseIdx);
+                        ProgramData.CurrentSelectCourseIdx -= 1;
                     }
 
                     if (ProgramData.ReadyToSelectCoursesList.Count == 0)
                     {
-                        timer_loopSelect.Stop();
+                        _timerLoopSelect.Stop();
                         AddLog("全部加選完畢。");
 
                         btn_readySelCoursesList.Enabled = true;
@@ -595,40 +577,42 @@ namespace CYCU_Course_Selection_Helper
                         btn_Cancel.Visible = false;
                         btn_StartSel.Visible = true;
                     }
-                    else if (ProgramData.CurrentSelectCourceIdx + 1 == ProgramData.ReadyToSelectCoursesList.Count)
-                        ProgramData.CurrentSelectCourceIdx = 0;       //  If reach end of list, return to start of list
+                    else if (ProgramData.CurrentSelectCourseIdx + 1 == ProgramData.ReadyToSelectCoursesList.Count)
+                    {
+                        ProgramData.CurrentSelectCourseIdx = 0; //  If reach end of list, return to start of list
+                    }
                     else
-                        ProgramData.CurrentSelectCourceIdx += 1;      //  Default, retrieve list one by one
+                    {
+                        ProgramData.CurrentSelectCourseIdx += 1; //  Default, retrieve list one by one
+                    }
 
-                    if (msg.Contains("未知"))     //  If lost connect
+                    if (msg.Contains("未知")) //  If lost connect
                     {
                         AddLog("等待登入成功後將自動進行嘗試加選。");
                         LostConnect();
                     }
-                    else AddLog(msg);           //  Normal status
+                    else
+                    {
+                        AddLog(msg); //  Normal status
+                    }
                 }
-            }
         }
 
         private void timer_loopDelete_Elapsed(object sender, EventArgs e)
         {
             if (ProgramData.LoginSuccess)
-            {
                 if (checkBox_DelCourseFirst.Checked)
                 {
-                    string opcode = ProgramData.ReadyToDeleteCoursesList[ProgramData.CurrentDeleteCourceIdx].ToString();
+                    string opCode = ProgramData.ReadyToDeleteCoursesList[ProgramData.CurrentDeleteCourseIdx].ToString();
 
-                    HttpCommunication.DeleteSelection(opcode, out string msg);
+                    HttpCommunication.DeleteSelection(opCode, out string msg);
 
-                    if (ProgramData.CurrentDeleteCourceIdx + 1 == ProgramData.ReadyToDeleteCoursesList.Count)
-                    {
-                        timer_loopDelete.Stop();
-                    }
-                    else ProgramData.CurrentDeleteCourceIdx += 1;
+                    if (ProgramData.CurrentDeleteCourseIdx + 1 == ProgramData.ReadyToDeleteCoursesList.Count)
+                        _timerLoopDelete.Stop();
+                    else ProgramData.CurrentDeleteCourseIdx += 1;
 
                     AddLog(msg);
                 }
-            }
         }
 
         private void timer_tryToLogin_Elapsed(object sender, EventArgs e)
@@ -637,13 +621,13 @@ namespace CYCU_Course_Selection_Helper
 
             if (!HttpCommunication.Init(out ProgramData.SecureRandom))
             {
-                if (ConnectMode.Equals(CONN_MODE.UNKNOWN))
+                if (CMode.Equals(ConnectionMode.Unknown))
                 {
-                    ConnectMode = CONN_MODE.OFFLINE;
+                    CMode = ConnectionMode.Offline;
                     radio_register.Enabled = radio_selection.Enabled = true;
                     radio_selection.Checked = true;
                 }
-                else if (ConnectMode.Equals(CONN_MODE.OFFLINE))
+                else if (CMode.Equals(ConnectionMode.Offline))
                 {
                     slb_LoginAs.Text = "嘗試連接到伺服器（離線模式）";
                 }
@@ -651,13 +635,14 @@ namespace CYCU_Course_Selection_Helper
             else
             {
                 slb_LoginAs.Text = "伺服器連線成功，嘗試登入使用者";
-                ConnectMode = CONN_MODE.ONLINE;
+                CMode = ConnectionMode.Online;
             }
 
-            if (ConnectMode.Equals(CONN_MODE.ONLINE))
+            if (CMode.Equals(ConnectionMode.Online))
             {
-                ProgramData.EncryptPW = Crypto.GetEncrypt(ProgramData.LoginPW, ProgramData.LoginID, ProgramData.SecureRandom);
-                if (!HttpCommunication.Login(ProgramData.LoginID, ProgramData.EncryptPW, out string msg))
+                ProgramData.EncryptPw =
+                    Crypto.GetEncrypt(ProgramData.LoginPw, ProgramData.LoginId, ProgramData.SecureRandom);
+                if (!HttpCommunication.Login(ProgramData.LoginId, ProgramData.EncryptPw, out string msg))
                 {
                     AddLog(msg);
                     ProgramData.LoginSuccess = false;
@@ -669,7 +654,7 @@ namespace CYCU_Course_Selection_Helper
                 else
                 {
                     AddLog(msg);
-                    slb_LoginAs.Text = "登入為 " + ProgramData.LoginID;
+                    slb_LoginAs.Text = "登入為 " + ProgramData.LoginId;
                     ProgramData.LoginSuccess = true;
 
                     loginToolStripMenuItem.Visible = false;
@@ -679,14 +664,14 @@ namespace CYCU_Course_Selection_Helper
                     myCourseToolStripMenuItem.Visible = true;
                     searchCourseToolStripMenuItem.Visible = true;
 
-                    if (!timer_loopSelect.Enabled)
+                    if (!_timerLoopSelect.Enabled)
                     {
                         radio_register.Enabled = radio_selection.Enabled = true;
                         radio_register.Checked = true;
                     }
                 }
 
-                timer_tryToLogin.Stop();
+                _timerTryToLogin.Stop();
             }
         }
 
@@ -700,20 +685,20 @@ namespace CYCU_Course_Selection_Helper
         {
             try
             {
-                var gottonNetworkTime = NTPClient.GetNetworkTime();
+                DateTime gottonNetworkTime = NtpClient.GetNetworkTime();
 
                 //  Success get Network time, assign to ProgramData.CurrentNetworkTime
                 ProgramData.CurrentNetworkTime = gottonNetworkTime;
 
                 //  Sync network time per 5 mins
-                timer_syncNetworkTime.Interval = 300000;
+                _timerSyncNetworkTime.Interval = 300000;
             }
             catch (Exception ex)
             {
                 Debug.Print(ex.Message);
 
                 //  Sync fail, try again after 5 seconds later
-                timer_syncNetworkTime.Interval = 5000;
+                _timerSyncNetworkTime.Interval = 5000;
             }
             finally
             {
@@ -728,27 +713,28 @@ namespace CYCU_Course_Selection_Helper
 
             if (ProgramData.CurrentNetworkTime >= dateTimePicker_OnSchedule.Value.AddSeconds(-15))
             {
-                timer_tryToLogin.Interval = 300;
+                _timerTryToLogin.Interval = 300;
                 ExecuteSelect();
-                timer_waitForScheduledTime.Stop();
+                _timerWaitForScheduledTime.Stop();
             }
         }
 
         private void timer_keepConnectAlive_Elapsed(object sender, EventArgs e)
         {
             if (ProgramData.LoginSuccess)
-            {
-                //  If action not finish yet, dont block network source.
-                if (!(timer_loopRegister.Enabled || timer_loopSelect.Enabled))
+                //  If action not finish yet, do not block network source.
+                if (!(_timerLoopRegister.Enabled || _timerLoopSelect.Enabled))
                 {
-                    if (!HttpCommunication.GetAllMyCourses(ProgramData.LoginID, out dynamic datas, out string msg))
+                    if (!HttpCommunication.GetAllMyCourses(ProgramData.LoginId, out _, out _))
                     {
                         AddLog("已由伺服器端離線。");
                         LostConnect();
                     }
-                    else Debug.Print(DateTime.Now.ToLongTimeString() + " - Keep connection alive.");
+                    else
+                    {
+                        Debug.Print(DateTime.Now.ToLongTimeString() + " - Keep connection alive.");
+                    }
                 }
-            }
         }
     }
 }

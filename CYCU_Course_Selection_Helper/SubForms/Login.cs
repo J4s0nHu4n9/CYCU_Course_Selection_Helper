@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
+using CYCU_Course_Selection_Helper.Models;
 
-namespace CYCU_Course_Selection_Helper
+namespace CYCU_Course_Selection_Helper.SubForms
 {
     public partial class Login : Form
     {
@@ -18,8 +19,8 @@ namespace CYCU_Course_Selection_Helper
                 return;
             }
 
-            ProgramData.LoginID = txt_stuID.Text;
-            ProgramData.LoginPW = txt_stuPW.Text;
+            ProgramData.LoginId = txt_stuID.Text;
+            ProgramData.LoginPw = txt_stuPW.Text;
             ProgramData.AcceptToConnect = true;
             Close();
         }

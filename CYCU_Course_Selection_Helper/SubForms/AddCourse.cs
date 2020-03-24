@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using CYCU_Course_Selection_Helper.Models;
 
-namespace CYCU_Course_Selection_Helper
+namespace CYCU_Course_Selection_Helper.SubForms
 {
     public partial class AddCourse : Form
     {
@@ -13,7 +14,7 @@ namespace CYCU_Course_Selection_Helper
 
         private void AddCourse_Load(object sender, EventArgs e)
         {
-            FileIO.LoadFileFromTxt("sel_courses.list", out ProgramData.ReadyToSelectCoursesList);
+            FileIo.LoadFileFromTxt("sel_courses.list", out ProgramData.ReadyToSelectCoursesList);
 
             foreach (var item in ProgramData.ReadyToSelectCoursesList)
             {
@@ -59,7 +60,7 @@ namespace CYCU_Course_Selection_Helper
             for (var i = 0; i < list_Course.Items.Count; i++)
                 ProgramData.ReadyToSelectCoursesList.Add(list_Course.Items[i].Text);
 
-            FileIO.SaveListToTxt("sel_courses.list", ProgramData.ReadyToSelectCoursesList);
+            FileIo.SaveListToTxt("sel_courses.list", ProgramData.ReadyToSelectCoursesList);
 
             Close();
         }

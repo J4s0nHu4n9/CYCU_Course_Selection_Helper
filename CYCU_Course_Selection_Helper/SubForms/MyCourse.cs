@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
+using CYCU_Course_Selection_Helper.Models;
 
-namespace CYCU_Course_Selection_Helper
+namespace CYCU_Course_Selection_Helper.SubForms
 {
     public partial class MyCourse : Form
     {
@@ -19,7 +20,7 @@ namespace CYCU_Course_Selection_Helper
         private void RefreshCourseList()
         {
 
-            if (HttpCommunication.GetAllMyCourses(ProgramData.LoginID, out dynamic datas, out string msg))
+            if (HttpCommunication.GetAllMyCourses(ProgramData.LoginId, out dynamic datas, out string msg))
             {
                 listView_Courses.Items.Clear();
                 if (datas != null)
@@ -38,7 +39,7 @@ namespace CYCU_Course_Selection_Helper
         private void RefreshAppendList()
         {
 
-            if (HttpCommunication.GetAllMyCoursesAppend(ProgramData.LoginID, out dynamic datas, out string msg))
+            if (HttpCommunication.GetAllMyCoursesAppend(ProgramData.LoginId, out dynamic datas, out string msg))
             {
                 listView_Appends.Items.Clear();
                 if (datas != null)

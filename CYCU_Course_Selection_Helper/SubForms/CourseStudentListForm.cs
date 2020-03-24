@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Drawing;
 using System.Windows.Forms;
+using CYCU_Course_Selection_Helper.Models;
 
-namespace CYCU_Course_Selection_Helper
+namespace CYCU_Course_Selection_Helper.SubForms
 {
     public partial class CourseStudentListForm : Form
     {
         public string OpCode { set; get; }
 
-        public int LastSearchIndex { set; get; }
+        private int LastSearchIndex { set; get; }
 
         public CourseStudentListForm()
         {

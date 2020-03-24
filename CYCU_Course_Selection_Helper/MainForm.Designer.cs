@@ -1,4 +1,6 @@
-﻿namespace CYCU_Course_Selection_Helper
+﻿using System.Windows.Forms;
+
+namespace CYCU_Course_Selection_Helper
 {
     partial class MainForm
     {
@@ -53,8 +55,8 @@
             this.btn_Cancel = new System.Windows.Forms.Button();
             this.checkBox_DelCourseFirst = new System.Windows.Forms.CheckBox();
             this.btn_readyDelCoursesList = new System.Windows.Forms.Button();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.cmenu_txtLog.SuspendLayout();
-            this.statusStrip.SuspendLayout();
             this.group_TimePicker.SuspendLayout();
             this.menuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -75,25 +77,31 @@
             this.txt_Log.Size = new System.Drawing.Size(300, 307);
             this.txt_Log.TabIndex = 3;
             this.txt_Log.Text = "00:00:00\t請先進行登入。\r\n";
-            this.txt_Log.TextChanged += new System.EventHandler(this.txt_Log_TextChanged);
-            this.txt_Log.Enter += new System.EventHandler(this.txt_Log_Enter);
+            this.txt_Log.TextChanged += new System.EventHandler(this.Txt_Log_TextChanged);
+            this.txt_Log.Enter += new System.EventHandler(this.Txt_Log_Enter);
             // 
             // cmenu_txtLog
             // 
-            this.cmenu_txtLog.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.clearLog_ToolStripMenuItem});
+            this.cmenu_txtLog.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                this.clearLog_ToolStripMenuItem
+            });
             this.cmenu_txtLog.Name = "cmenu_txtLog";
-            this.cmenu_txtLog.Size = new System.Drawing.Size(123, 26);
+            this.cmenu_txtLog.Size = new System.Drawing.Size(127, 26);
             // 
             // clearLog_ToolStripMenuItem
             // 
             this.clearLog_ToolStripMenuItem.Name = "clearLog_ToolStripMenuItem";
-            this.clearLog_ToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.clearLog_ToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.clearLog_ToolStripMenuItem.Text = "清空紀錄";
-            this.clearLog_ToolStripMenuItem.Click += new System.EventHandler(this.clearLog_ToolStripMenuItem_Click);
+            this.clearLog_ToolStripMenuItem.Click += new System.EventHandler(this.ClearLog_ToolStripMenuItem_Click);
             // 
             // statusStrip
             // 
+            this.statusStrip.Items.AddRange(new ToolStripItem[]
+            {
+                this.slb_LoginAs
+            });
             this.statusStrip.Location = new System.Drawing.Point(0, 385);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(465, 22);
@@ -117,7 +125,7 @@
             this.radio_register.TabIndex = 6;
             this.radio_register.Text = "篩選登記";
             this.radio_register.UseVisualStyleBackColor = true;
-            this.radio_register.CheckedChanged += new System.EventHandler(this.radio_register_CheckedChanged);
+            this.radio_register.CheckedChanged += new System.EventHandler(this.Radio_register_CheckedChanged);
             // 
             // radio_selection
             // 
@@ -128,14 +136,14 @@
             this.radio_selection.TabIndex = 7;
             this.radio_selection.Text = "加選";
             this.radio_selection.UseVisualStyleBackColor = true;
-            this.radio_selection.CheckedChanged += new System.EventHandler(this.radio_selection_CheckedChanged);
+            this.radio_selection.CheckedChanged += new System.EventHandler(this.Radio_selection_CheckedChanged);
             // 
             // loginToolStripMenuItem
             // 
             this.loginToolStripMenuItem.Name = "loginToolStripMenuItem";
             this.loginToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
             this.loginToolStripMenuItem.Text = " 登入(&L)";
-            this.loginToolStripMenuItem.Click += new System.EventHandler(this.loginToolStripMenuItem_Click);
+            this.loginToolStripMenuItem.Click += new System.EventHandler(this.LoginToolStripMenuItem_Click);
             // 
             // cancelLoginToolStripMenuItem
             // 
@@ -143,7 +151,7 @@
             this.cancelLoginToolStripMenuItem.Size = new System.Drawing.Size(83, 20);
             this.cancelLoginToolStripMenuItem.Text = "取消登入(&C)";
             this.cancelLoginToolStripMenuItem.Visible = false;
-            this.cancelLoginToolStripMenuItem.Click += new System.EventHandler(this.cancelLoginToolStripMenuItem_Click);
+            this.cancelLoginToolStripMenuItem.Click += new System.EventHandler(this.CancelLoginToolStripMenuItem_Click);
             // 
             // logoutToolStripMenuItem
             // 
@@ -151,7 +159,7 @@
             this.logoutToolStripMenuItem.Size = new System.Drawing.Size(57, 20);
             this.logoutToolStripMenuItem.Text = "登出(&L)";
             this.logoutToolStripMenuItem.Visible = false;
-            this.logoutToolStripMenuItem.Click += new System.EventHandler(this.logoutToolStripMenuItem_Click);
+            this.logoutToolStripMenuItem.Click += new System.EventHandler(this.LogoutToolStripMenuItem_Click);
             // 
             // myCourseToolStripMenuItem
             // 
@@ -181,7 +189,7 @@
             this.checkBox_OnHook.TabIndex = 10;
             this.checkBox_OnHook.Text = "掛機模式";
             this.checkBox_OnHook.UseVisualStyleBackColor = true;
-            this.checkBox_OnHook.CheckedChanged += new System.EventHandler(this.checkBox_OnHook_CheckedChanged);
+            this.checkBox_OnHook.CheckedChanged += new System.EventHandler(this.CheckBox_OnHook_CheckedChanged);
             // 
             // checkBox_OnSchedule
             // 
@@ -193,7 +201,7 @@
             this.checkBox_OnSchedule.TabIndex = 11;
             this.checkBox_OnSchedule.Text = "排程執行";
             this.checkBox_OnSchedule.UseVisualStyleBackColor = true;
-            this.checkBox_OnSchedule.CheckedChanged += new System.EventHandler(this.checkBox_OnSchedule_CheckedChanged);
+            this.checkBox_OnSchedule.CheckedChanged += new System.EventHandler(this.CheckBox_OnSchedule_CheckedChanged);
             // 
             // group_TimePicker
             // 
@@ -228,11 +236,17 @@
             // 
             // menuStrip
             // 
+            this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] 
+            {
+                this.loginToolStripMenuItem,
+                this.cancelLoginToolStripMenuItem,
+                this.logoutToolStripMenuItem,
+                this.myCourseToolStripMenuItem
+            });
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Size = new System.Drawing.Size(465, 24);
             this.menuStrip.TabIndex = 8;
-            this.menuStrip.Text = "menuStrip1";
             // 
             // searchCourseToolStripMenuItem
             // 
@@ -250,7 +264,7 @@
             this.btn_StartReg.TabIndex = 14;
             this.btn_StartReg.Text = "篩選登記";
             this.btn_StartReg.UseVisualStyleBackColor = true;
-            this.btn_StartReg.Click += new System.EventHandler(this.btn_StartReg_Click);
+            this.btn_StartReg.Click += new System.EventHandler(this.Btn_StartReg_Click);
             // 
             // btn_StartSel
             // 
@@ -260,7 +274,7 @@
             this.btn_StartSel.TabIndex = 15;
             this.btn_StartSel.Text = "輔助加選";
             this.btn_StartSel.UseVisualStyleBackColor = true;
-            this.btn_StartSel.Click += new System.EventHandler(this.btn_StartSel_Click);
+            this.btn_StartSel.Click += new System.EventHandler(this.Btn_StartSel_Click);
             // 
             // btn_Cancel
             // 
@@ -285,7 +299,7 @@
             this.checkBox_DelCourseFirst.TabIndex = 17;
             this.checkBox_DelCourseFirst.Text = "先退選模式";
             this.checkBox_DelCourseFirst.UseVisualStyleBackColor = true;
-            this.checkBox_DelCourseFirst.CheckedChanged += new System.EventHandler(this.checkBox_DelCourseFirst_CheckedChanged);
+            this.checkBox_DelCourseFirst.CheckedChanged += new System.EventHandler(this.CheckBox_DelCourseFirst_CheckedChanged);
             // 
             // btn_readyDelCoursesList
             // 
@@ -324,8 +338,6 @@
             this.Text = "CYCU CSYS Helper BY J4S0N.H";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.cmenu_txtLog.ResumeLayout(false);
-            this.statusStrip.ResumeLayout(false);
-            this.statusStrip.PerformLayout();
             this.group_TimePicker.ResumeLayout(false);
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
@@ -359,6 +371,7 @@
         private System.Windows.Forms.CheckBox checkBox_DelCourseFirst;
         private System.Windows.Forms.Button btn_readyDelCoursesList;
         private System.Windows.Forms.ToolStripMenuItem searchCourseToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
     }
 }
 
